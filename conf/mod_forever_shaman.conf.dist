@@ -18,3 +18,13 @@
 #
 
 ForeverShaman.GhostWolfSpeed.Enable = 1
+
+#
+#    ForeverShaman.GhostWolfSpeed.OutOfCombatOnly
+#        Description: With 1, Ghost Wolf only gets the mount speed out of combat: entering combat
+#                     drops it to the stock 40% and leaving combat brings it back. Mounts can't be
+#                     used in combat at all. With 0, it keeps the mount speed in combat too.
+#        Default:     1
+#
+
+ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 1
