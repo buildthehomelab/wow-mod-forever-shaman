@@ -20,7 +20,12 @@ The numbers come from mod-mount-scaling's own `MountScaling.*` settings, so the 
 A shaman without Apprentice Riding keeps the stock 40%. The speed changes as soon as you shift,
 and when you level up in wolf form.
 
-Ghost Wolf is still outdoors only and can still be used in combat, as in stock. Mount-only
+Ghost Wolf only gets the mount speed **out of combat**. Entering combat drops it to the stock 40%
+and leaving combat brings it back, so it stays a way to travel rather than a way to kite (a mount
+can't be used in combat at all). `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 0` keeps the
+mount speed in combat too.
+
+Ghost Wolf is still outdoors only and can still be cast in combat, as in stock. Mount-only
 bonuses (Riding Crop, Mithril Spurs, Carrot on a Stick) don't apply to it, and other run speed
 effects don't stack with it: the core takes the highest one. Improved Ghost Wolf and the Glyph
 of Ghost Wolf work as before.
@@ -47,6 +52,7 @@ Rebuild the server and copy `conf/mod_forever_shaman.conf.dist` to your config f
 | Setting | Default | What it does |
 |---------|---------|--------------|
 | `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling. With `0`, it's the stock 40%. |
+| `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly` | `1` | Only out of combat; in combat Ghost Wolf is the stock 40%. With `0`, the mount speed applies in combat too. |
 
 ## License
 

@@ -5,10 +5,12 @@
  *
  * - With mod-mount-scaling installed, Ghost Wolf follows its level-scaled mount speed, like a
  *   mount would. mod-mount-scaling only changes mount auras, so Ghost Wolf kept its flat 40%.
+ *   Only out of combat: in combat it's the stock 40%, since a mount can't be used in combat at
+ *   all.
  *
  * Ghost Wolf (2645) holds its speed on the spell itself: effect 1 raises run speed by 40%
  * (SPELL_AURA_MOD_INCREASE_SPEED). A UnitScript sets that effect once the aura is applied, and
- * again when the shaman levels up in wolf form. No client patch.
+ * again when the shaman levels up, enters or leaves combat in wolf form. No client patch.
  *
  * Released under the MIT License.
  */
@@ -32,6 +34,7 @@ namespace
     struct Config
     {
         bool ghostWolfSpeedEnabled = true;
+        bool ghostWolfOutOfCombatOnly = true;
     };
 
     Config config;
@@ -77,7 +80,11 @@ namespace
         if (!effect || effect->GetAuraType() != SPELL_AURA_MOD_INCREASE_SPEED)
             return;
 
-        int32 const speed = GroundMountSpeed(player);
+        // In combat, Ghost Wolf goes back to its own speed (40%).
+        int32 const speed = config.ghostWolfOutOfCombatOnly && player->IsInCombat()
+            ? effect->GetSpellInfo()->Effects[EFFECT_1].CalcValue()
+            : GroundMountSpeed(player);
+
         if (speed > 0 && speed != effect->GetAmount())
             effect->ChangeAmount(speed);
     }
@@ -90,7 +97,8 @@ public:
 
     void OnAfterConfigLoad(bool /*reload*/) override
     {
-        config.ghostWolfSpeedEnabled = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.Enable", true);
+        config.ghostWolfSpeedEnabled    = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.Enable", true);
+        config.ghostWolfOutOfCombatOnly = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.OutOfCombatOnly", true);
 
         // mod-mount-scaling's own settings, with its defaults. Without that module these aren't
         // in any config file, so don't log them as missing.
@@ -110,10 +118,31 @@ class ForeverShamanPlayerScript : public PlayerScript
 public:
     ForeverShamanPlayerScript() : PlayerScript("ForeverShamanPlayerScript") { }
 
-    // A shaman who levels up in Ghost Wolf speeds up right away. Other changes (a new riding
-    // skill, a config reload) take effect the next time they shift.
+    // A shaman who levels up, enters or leaves combat in Ghost Wolf changes speed right away.
+    // Other changes (a new riding skill, a config reload) take effect the next time they shift.
     void OnPlayerLevelChanged(Player* player, uint8 /*oldLevel*/) override
     {
+        Update(player);
+    }
+
+    // The core sets the combat flag before calling these, so ApplyGhostWolfSpeed sees the new
+    // state.
+    void OnPlayerEnterCombat(Player* player, Unit* /*enemy*/) override
+    {
+        Update(player);
+    }
+
+    void OnPlayerLeaveCombat(Player* player) override
+    {
+        Update(player);
+    }
+
+private:
+    static void Update(Player* player)
+    {
+        if (player->getClass() != CLASS_SHAMAN)
+            return;
+
         if (Aura* aura = player->GetAura(SPELL_GHOST_WOLF))
             ApplyGhostWolfSpeed(player, aura);
     }
