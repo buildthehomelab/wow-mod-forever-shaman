@@ -1,0 +1,20 @@
+[worldserver]
+
+########################################
+# mod-forever-shaman
+#
+# Shaman changes for 3.3.5. For now: Ghost Wolf follows mod-mount-scaling's level-scaled mount
+# speed. No client patch.
+########################################
+
+#
+#    ForeverShaman.GhostWolfSpeed.Enable
+#        Description: With mod-mount-scaling installed, Ghost Wolf gets the same level-scaled
+#                     speed as a ground mount, from Apprentice or Journeyman Riding. The numbers
+#                     come from mod-mount-scaling's own MountScaling.* settings. A shaman without
+#                     riding keeps the stock 40%. Does nothing without mod-mount-scaling or with
+#                     MountScaling.Enable = 0.
+#        Default:     1
+#
+
+ForeverShaman.GhostWolfSpeed.Enable = 1
