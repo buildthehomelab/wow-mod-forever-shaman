@@ -3,8 +3,8 @@
 ########################################
 # mod-forever-shaman
 #
-# Shaman changes for 3.3.5. For now: Ghost Wolf follows mod-mount-scaling's level-scaled mount
-# speed. No client patch.
+# Shaman changes for 3.3.5: Ghost Wolf follows mod-mount-scaling's level-scaled mount speed, and
+# can mine. Mining in Ghost Wolf needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
 ########################################
 
 #
@@ -28,3 +28,15 @@ ForeverShaman.GhostWolfSpeed.Enable = 1
 #
 
 ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 1
+
+#
+#    ForeverShaman.GhostWolfGathering.Enable
+#        Description: Let shamans mine (and mine or salvage creature corpses) in Ghost Wolf. Herb
+#                     Gathering and Skinning already work in Ghost Wolf. The client checks this
+#                     itself, so it also needs the optional client patch
+#                     (tools/patch-forever-shaman-dbc.sh); without it the client still says you
+#                     can't do that while shapeshifted.
+#        Default:     1
+#
+
+ForeverShaman.GhostWolfGathering.Enable = 1

@@ -7,6 +7,9 @@
  *   mount would. mod-mount-scaling only changes mount auras, so Ghost Wolf kept its flat 40%.
  *   Only out of combat: in combat it's the stock 40%, since a mount can't be used in combat at
  *   all.
+ * - Mining works in Ghost Wolf. Herb Gathering and Skinning already do in stock 3.3.5, but Mining
+ *   (and mining or salvaging a creature's corpse) is blocked while shapeshifted. The client checks
+ *   this itself, so it needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
  *
  * Ghost Wolf (2645) holds its speed on the spell itself: effect 1 raises run speed by 40%
  * (SPELL_AURA_MOD_INCREASE_SPEED). A UnitScript sets that effect once the aura is applied, and
@@ -20,8 +23,11 @@
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 #include "SpellAuras.h"
+#include "SpellInfo.h"
+#include "SpellMgr.h"
 
 #include <algorithm>
+#include <array>
 
 namespace
 {
@@ -35,6 +41,7 @@ namespace
     {
         bool ghostWolfSpeedEnabled = true;
         bool ghostWolfOutOfCombatOnly = true;
+        bool ghostWolfGatheringEnabled = true;
     };
 
     Config config;
@@ -88,6 +95,39 @@ namespace
         if (speed > 0 && speed != effect->GetAmount())
             effect->ChangeAmount(speed);
     }
+
+    // The gathering spells the game data blocks while shapeshifted: every rank of Mining, mining
+    // a creature's corpse (32606) and Engineering salvage (49383). Herb Gathering and Skinning
+    // don't say "not while shapeshifted", so they already work in Ghost Wolf. Must match
+    // tools/patch-forever-shaman-dbc.sh.
+    constexpr std::array<uint32, 8> GHOST_WOLF_GATHERING_SPELLS = { 2575, 2576, 3564, 10248, 29354, 50310, 32606, 49383 };
+
+    constexpr uint32 FORM_MASK_GHOST_WOLF = 1 << (FORM_GHOSTWOLF - 1);
+
+    // Let shamans mine in Ghost Wolf: Ghost Wolf goes in the spell's form list, with "also outside
+    // a form", the way the game data lets Thorns be cast in Moonkin Form. Other forms still block
+    // it.
+    //
+    // mod-forever-druid adds the druid forms to the same spells, so this only adds and removes
+    // Ghost Wolf, and never takes "also outside a form" off again: with no forms listed it does
+    // nothing.
+    void ApplyGhostWolfGathering()
+    {
+        for (uint32 spellId : GHOST_WOLF_GATHERING_SPELLS)
+        {
+            SpellInfo* spellInfo = const_cast<SpellInfo*>(sSpellMgr->GetSpellInfo(spellId));
+            if (!spellInfo)
+                continue;
+
+            if (config.ghostWolfGatheringEnabled)
+            {
+                spellInfo->Stances |= FORM_MASK_GHOST_WOLF;
+                spellInfo->AttributesEx2 |= SPELL_ATTR2_ALLOW_WHILE_NOT_SHAPESHIFTED;
+            }
+            else
+                spellInfo->Stances &= ~FORM_MASK_GHOST_WOLF;
+        }
+    }
 }
 
 class ForeverShamanWorldScript : public WorldScript
@@ -97,8 +137,9 @@ public:
 
     void OnAfterConfigLoad(bool /*reload*/) override
     {
-        config.ghostWolfSpeedEnabled    = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.Enable", true);
-        config.ghostWolfOutOfCombatOnly = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.OutOfCombatOnly", true);
+        config.ghostWolfSpeedEnabled     = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.Enable", true);
+        config.ghostWolfOutOfCombatOnly  = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.OutOfCombatOnly", true);
+        config.ghostWolfGatheringEnabled = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfGathering.Enable", true);
 
         // mod-mount-scaling's own settings, with its defaults. Without that module these aren't
         // in any config file, so don't log them as missing.
@@ -110,6 +151,14 @@ public:
         mountScaling.journeymanPerLevel = mountOption("MountScaling.Ground.Journeyman.SpeedPerLevel", 2.5f);
         mountScaling.journeymanMin      = mountOption("MountScaling.Ground.Journeyman.MinSpeed", 100.0f);
         mountScaling.journeymanMax      = mountOption("MountScaling.Ground.Journeyman.MaxSpeed", 150.0f);
+
+        // At startup the spells aren't loaded yet; OnBeforeWorldInitialized does it then.
+        ApplyGhostWolfGathering();
+    }
+
+    void OnBeforeWorldInitialized() override
+    {
+        ApplyGhostWolfGathering();
     }
 };
 
