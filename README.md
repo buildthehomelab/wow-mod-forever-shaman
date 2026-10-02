@@ -1,7 +1,8 @@
 # Forever Shaman
 
 An [AzerothCore](https://www.azerothcore.org/) (WotLK 3.3.5a) module for shaman changes on a
-3.3.5 server. For now that's Ghost Wolf keeping up with level-scaled mounts. No client patch.
+3.3.5 server: Ghost Wolf keeps up with level-scaled mounts, and can mine. Mining in Ghost Wolf
+needs a small optional client patch; the speed change doesn't.
 
 ## Ghost Wolf speed
 
@@ -34,6 +35,17 @@ Without mod-mount-scaling (or with `MountScaling.Enable = 0`) nothing changes.
 [mod-forever-druid](https://github.com/buildthehomelab/wow-mod-forever-druid) does the same for
 Travel Form and the flight forms.
 
+## Mining in Ghost Wolf
+
+Stock 3.3.5 lets shamans gather herbs and skin in Ghost Wolf, but Mining says "Can't do that while
+shapeshifted". With this module every rank of Mining works in Ghost Wolf, and so do mining a
+creature's corpse and Engineering salvage. You stay in wolf form.
+
+The client checks this before it asks the server, so it needs the client patch below: without it
+the client still refuses. [mod-forever-druid](https://github.com/buildthehomelab/wow-mod-forever-druid)
+does the same for the druid forms; the two patch scripts can run on the same Spell.dbc in either
+order.
+
 ## Install
 
 Clone it into your AzerothCore `modules` folder **as `mod-forever-shaman`**, without the repo's
@@ -53,6 +65,20 @@ Rebuild the server and copy `conf/mod_forever_shaman.conf.dist` to your config f
 |---------|---------|--------------|
 | `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling. With `0`, it's the stock 40%. |
 | `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly` | `1` | Only out of combat; in combat Ghost Wolf is the stock 40%. With `0`, the mount speed applies in combat too. |
+| `ForeverShaman.GhostWolfGathering.Enable` | `1` | Mining works in Ghost Wolf (needs the client patch). |
+
+## Optional client patch
+
+`tools/patch-forever-shaman-dbc.sh` adds Ghost Wolf to Mining (all 6 ranks), creature mining and
+Engineering salvage in the client's Spell.dbc:
+
+```bash
+tools/patch-forever-shaman-dbc.sh <Spell.dbc> DBFilesClient
+```
+
+Only the newest client patch's copy of Spell.dbc is used, so run it on the Spell.dbc your current
+patch already ships (with the other modules' changes) and put the result back in that patch.
+Players who get the new patch should delete their `Cache` folder.
 
 ## License
 
