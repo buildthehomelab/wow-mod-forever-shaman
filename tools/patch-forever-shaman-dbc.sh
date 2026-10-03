@@ -5,6 +5,7 @@
 #
 # - Mining in Ghost Wolf: the client blocks spells that say "not while shapeshifted" before it
 #   asks the server, so without this the client still says you can't do that while shapeshifted.
+# - Ghost Wolf indoors: the client also refuses outdoors-only spells indoors by itself.
 #
 # Usage: tools/patch-forever-shaman-dbc.sh <Spell.dbc> [output dir]
 #   <Spell.dbc>   3.3.5a Spell.dbc: the client's own, or one another module's script already
@@ -30,6 +31,8 @@ GHOST_WOLF_GATHERING_SPELLS = [2575, 2576, 3564, 10248, 29354, 50310, 32606, 493
 FORM_MASK_GHOST_WOLF = 1 << (16 - 1)  # FORM_GHOSTWOLF
 SPELL_ATTR0_NOT_SHAPESHIFTED = 0x10000
 SPELL_ATTR2_ALLOW_WHILE_NOT_SHAPESHIFTED = 0x80000
+SPELL_GHOST_WOLF = 2645
+SPELL_ATTR0_ONLY_OUTDOORS = 0x8000
 
 SPELL_FIELDS = 234
 ATTRIBUTES = 4                # m_attributes
@@ -57,6 +60,13 @@ for spell_id in GHOST_WOLF_GATHERING_SPELLS:
     row[STANCES] |= FORM_MASK_GHOST_WOLF
     row[ATTRIBUTES_EX2] |= SPELL_ATTR2_ALLOW_WHILE_NOT_SHAPESHIFTED
 print(f"  {len(GHOST_WOLF_GATHERING_SPELLS)} mining spells: usable in Ghost Wolf")
+
+# Same as ApplyGhostWolfIndoors: Ghost Wolf is no longer outdoors only.
+row = by_id.get(SPELL_GHOST_WOLF)
+if row is None:
+    sys.exit(f"{spell_src}: spell {SPELL_GHOST_WOLF} not found")
+row[ATTRIBUTES] &= ~SPELL_ATTR0_ONLY_OUTDOORS
+print(f"  Ghost Wolf ({SPELL_GHOST_WOLF}): usable indoors")
 
 os.makedirs(out_dir, exist_ok=True)
 out = os.path.join(out_dir, "Spell.dbc")
