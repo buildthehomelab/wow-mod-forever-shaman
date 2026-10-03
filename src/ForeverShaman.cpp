@@ -10,6 +10,9 @@
  * - Mining works in Ghost Wolf. Herb Gathering and Skinning already do in stock 3.3.5, but Mining
  *   (and mining or salvaging a creature's corpse) is blocked while shapeshifted. The client checks
  *   this itself, so it needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
+ * - Ghost Wolf works indoors. Stock Ghost Wolf is outdoors only: it can't be cast indoors, and
+ *   walking into a building cancels it. The client checks this too, so casting it indoors needs
+ *   the same client patch.
  *
  * Ghost Wolf (2645) holds its speed on the spell itself: effect 1 raises run speed by 40%
  * (SPELL_AURA_MOD_INCREASE_SPEED). A UnitScript sets that effect once the aura is applied, and
@@ -42,6 +45,7 @@ namespace
         bool ghostWolfSpeedEnabled = true;
         bool ghostWolfOutOfCombatOnly = true;
         bool ghostWolfGatheringEnabled = true;
+        bool ghostWolfIndoorsEnabled = true;
     };
 
     Config config;
@@ -128,6 +132,27 @@ namespace
                 spellInfo->Stances &= ~FORM_MASK_GHOST_WOLF;
         }
     }
+
+    // Let Ghost Wolf be cast and kept indoors. "Only outdoors" is both what Spell::CheckCast
+    // refuses indoors and what Player::CheckAreaExploreAndOutdoor removes when the shaman walks
+    // inside, so taking it off covers both.
+    void ApplyGhostWolfIndoors()
+    {
+        SpellInfo* spellInfo = const_cast<SpellInfo*>(sSpellMgr->GetSpellInfo(SPELL_GHOST_WOLF));
+        if (!spellInfo)
+            return;
+
+        if (config.ghostWolfIndoorsEnabled)
+            spellInfo->Attributes &= ~SPELL_ATTR0_ONLY_OUTDOORS;
+        else
+            spellInfo->Attributes |= SPELL_ATTR0_ONLY_OUTDOORS;
+    }
+
+    void ApplySpellChanges()
+    {
+        ApplyGhostWolfGathering();
+        ApplyGhostWolfIndoors();
+    }
 }
 
 class ForeverShamanWorldScript : public WorldScript
@@ -140,6 +165,7 @@ public:
         config.ghostWolfSpeedEnabled     = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.Enable", true);
         config.ghostWolfOutOfCombatOnly  = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfSpeed.OutOfCombatOnly", true);
         config.ghostWolfGatheringEnabled = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfGathering.Enable", true);
+        config.ghostWolfIndoorsEnabled   = sConfigMgr->GetOption<bool>("ForeverShaman.GhostWolfIndoors.Enable", true);
 
         // mod-mount-scaling's own settings, with its defaults. Without that module these aren't
         // in any config file, so don't log them as missing.
@@ -153,12 +179,12 @@ public:
         mountScaling.journeymanMax      = mountOption("MountScaling.Ground.Journeyman.MaxSpeed", 150.0f);
 
         // At startup the spells aren't loaded yet; OnBeforeWorldInitialized does it then.
-        ApplyGhostWolfGathering();
+        ApplySpellChanges();
     }
 
     void OnBeforeWorldInitialized() override
     {
-        ApplyGhostWolfGathering();
+        ApplySpellChanges();
     }
 };
 

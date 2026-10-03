@@ -1,8 +1,8 @@
 # Forever Shaman
 
 An [AzerothCore](https://www.azerothcore.org/) (WotLK 3.3.5a) module for shaman changes on a
-3.3.5 server: Ghost Wolf keeps up with level-scaled mounts, and can mine. Mining in Ghost Wolf
-needs a small optional client patch; the speed change doesn't.
+3.3.5 server: Ghost Wolf keeps up with level-scaled mounts, can mine and works indoors. Mining
+and casting Ghost Wolf indoors need a small optional client patch; the speed change doesn't.
 
 ## Ghost Wolf speed
 
@@ -26,7 +26,7 @@ and leaving combat brings it back, so it stays a way to travel rather than a way
 can't be used in combat at all). `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 0` keeps the
 mount speed in combat too.
 
-Ghost Wolf is still outdoors only and can still be cast in combat, as in stock. Mount-only
+Ghost Wolf can still be cast in combat, as in stock, and works indoors (see below). Mount-only
 bonuses (Riding Crop, Mithril Spurs, Carrot on a Stick) don't apply to it, and other run speed
 effects don't stack with it: the core takes the highest one. Improved Ghost Wolf and the Glyph
 of Ghost Wolf work as before.
@@ -45,6 +45,15 @@ The client checks this before it asks the server, so it needs the client patch b
 the client still refuses. [mod-forever-druid](https://github.com/buildthehomelab/wow-mod-forever-druid)
 does the same for the druid forms; the two patch scripts can run on the same Spell.dbc in either
 order.
+
+## Ghost Wolf indoors
+
+Stock Ghost Wolf is outdoors only: you can't shift inside a building, cave or dungeon, and walking
+into one drops you out of wolf form. With this module you keep Ghost Wolf when you walk inside, and
+can cast it there. Speed indoors is the same as outdoors.
+
+Keeping it when you walk in works without the client patch. Casting it indoors needs the patch
+below, because the client refuses outdoors-only spells itself.
 
 ## Install
 
@@ -66,11 +75,12 @@ Rebuild the server and copy `conf/mod_forever_shaman.conf.dist` to your config f
 | `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling. With `0`, it's the stock 40%. |
 | `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly` | `1` | Only out of combat; in combat Ghost Wolf is the stock 40%. With `0`, the mount speed applies in combat too. |
 | `ForeverShaman.GhostWolfGathering.Enable` | `1` | Mining works in Ghost Wolf (needs the client patch). |
+| `ForeverShaman.GhostWolfIndoors.Enable` | `1` | Ghost Wolf works indoors (casting it there needs the client patch). |
 
 ## Optional client patch
 
 `tools/patch-forever-shaman-dbc.sh` adds Ghost Wolf to Mining (all 6 ranks), creature mining and
-Engineering salvage in the client's Spell.dbc:
+Engineering salvage, and takes "outdoors only" off Ghost Wolf, in the client's Spell.dbc:
 
 ```bash
 tools/patch-forever-shaman-dbc.sh <Spell.dbc> DBFilesClient

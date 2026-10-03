@@ -3,8 +3,9 @@
 ########################################
 # mod-forever-shaman
 #
-# Shaman changes for 3.3.5: Ghost Wolf follows mod-mount-scaling's level-scaled mount speed, and
-# can mine. Mining in Ghost Wolf needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
+# Shaman changes for 3.3.5: Ghost Wolf follows mod-mount-scaling's level-scaled mount speed, can
+# mine and works indoors. Mining and casting indoors need the optional client patch
+# (tools/patch-forever-shaman-dbc.sh).
 ########################################
 
 #
@@ -40,3 +41,15 @@ ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 1
 #
 
 ForeverShaman.GhostWolfGathering.Enable = 1
+
+#
+#    ForeverShaman.GhostWolfIndoors.Enable
+#        Description: Let Ghost Wolf be used indoors. Stock Ghost Wolf is outdoors only: it can't
+#                     be cast indoors, and walking into a building cancels it. With 1, walking
+#                     inside keeps it. Casting it indoors also needs the optional client patch
+#                     (tools/patch-forever-shaman-dbc.sh); without it the client still says you
+#                     can only use that outdoors.
+#        Default:     1
+#
+
+ForeverShaman.GhostWolfIndoors.Enable = 1
