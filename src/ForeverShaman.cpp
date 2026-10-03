@@ -5,8 +5,8 @@
  *
  * - With mod-mount-scaling installed, Ghost Wolf follows its level-scaled mount speed, like a
  *   mount would. mod-mount-scaling only changes mount auras, so Ghost Wolf kept its flat 40%.
- *   Only out of combat: in combat it's the stock 40%, since a mount can't be used in combat at
- *   all.
+ *   Only outdoors and out of combat: in combat and indoors it's the stock 40%, since a mount
+ *   can't be used there either. It never drops below 40%.
  * - Mining works in Ghost Wolf. Herb Gathering and Skinning already do in stock 3.3.5, but Mining
  *   (and mining or salvaging a creature's corpse) is blocked while shapeshifted. The client checks
  *   this itself, so it needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
@@ -16,7 +16,8 @@
  *
  * Ghost Wolf (2645) holds its speed on the spell itself: effect 1 raises run speed by 40%
  * (SPELL_AURA_MOD_INCREASE_SPEED). A UnitScript sets that effect once the aura is applied, and
- * again when the shaman levels up, enters or leaves combat in wolf form. No client patch.
+ * again when the shaman levels up, enters or leaves combat, or walks indoors or outdoors in wolf
+ * form. No client patch.
  *
  * Released under the MIT License.
  */
@@ -91,10 +92,11 @@ namespace
         if (!effect || effect->GetAuraType() != SPELL_AURA_MOD_INCREASE_SPEED)
             return;
 
-        // In combat, Ghost Wolf goes back to its own speed (40%).
-        int32 const speed = config.ghostWolfOutOfCombatOnly && player->IsInCombat()
-            ? effect->GetSpellInfo()->Effects[EFFECT_1].CalcValue()
-            : GroundMountSpeed(player);
+        // In combat and indoors, Ghost Wolf keeps its own speed (40%), since a mount can't be used
+        // there either. Outdoors and out of combat it scales, but never below 40%.
+        int32 const stockSpeed = effect->GetSpellInfo()->Effects[EFFECT_1].CalcValue();
+        bool const scaled = !(config.ghostWolfOutOfCombatOnly && player->IsInCombat()) && player->IsOutdoors();
+        int32 const speed = scaled ? std::max(stockSpeed, GroundMountSpeed(player)) : stockSpeed;
 
         if (speed > 0 && speed != effect->GetAmount())
             effect->ChangeAmount(speed);
@@ -193,7 +195,8 @@ class ForeverShamanPlayerScript : public PlayerScript
 public:
     ForeverShamanPlayerScript() : PlayerScript("ForeverShamanPlayerScript") { }
 
-    // A shaman who levels up, enters or leaves combat in Ghost Wolf changes speed right away.
+    // A shaman who levels up, enters or leaves combat, or walks indoors or outdoors in Ghost Wolf
+    // changes speed right away.
     // Other changes (a new riding skill, a config reload) take effect the next time they shift.
     void OnPlayerLevelChanged(Player* player, uint8 /*oldLevel*/) override
     {
@@ -208,6 +211,14 @@ public:
     }
 
     void OnPlayerLeaveCombat(Player* player) override
+    {
+        Update(player);
+    }
+
+    // Walking into or out of a building. The core keeps IsOutdoors() up to date as the player
+    // moves, and ApplyGhostWolfSpeed only changes the aura when the speed differs, so checking
+    // every update is cheap.
+    void OnPlayerUpdate(Player* player, uint32 /*diff*/) override
     {
         Update(player);
     }

@@ -26,6 +26,10 @@ and leaving combat brings it back, so it stays a way to travel rather than a way
 can't be used in combat at all). `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly = 0` keeps the
 mount speed in combat too.
 
+Indoors it's always the stock 40%, in or out of combat, since mounts can't go indoors either.
+Walking into a building drops it to 40% and walking back out brings the mount speed back. Ghost
+Wolf never drops below 40%, even when the mount curve is lower at low levels.
+
 Ghost Wolf can still be cast in combat, as in stock, and works indoors (see below). Mount-only
 bonuses (Riding Crop, Mithril Spurs, Carrot on a Stick) don't apply to it, and other run speed
 effects don't stack with it: the core takes the highest one. Improved Ghost Wolf and the Glyph
