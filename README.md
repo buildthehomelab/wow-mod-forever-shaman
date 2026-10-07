@@ -59,6 +59,14 @@ can cast it there. Speed indoors is the same as outdoors.
 Keeping it when you walk in works without the client patch. Casting it indoors needs the patch
 below, because the client refuses outdoors-only spells itself.
 
+## Requirements
+
+- [AzerothCore](https://www.azerothcore.org/) wotlk (master) and a WoW 3.3.5a (12340) client.
+- [mod-mount-scaling](https://github.com/buildthehomelab/wow-mod-mount-scaling) for the Ghost Wolf
+  speed. Without it, or with `MountScaling.Enable = 0`, Ghost Wolf keeps the stock 40%.
+- The optional client patch (see below) for mining in Ghost Wolf and casting Ghost Wolf indoors.
+  The speed change and keeping Ghost Wolf when you walk inside need no client change.
+
 ## Install
 
 Clone it into your AzerothCore `modules` folder **as `mod-forever-shaman`**, without the repo's
@@ -94,6 +102,24 @@ Only the newest client patch's copy of Spell.dbc is used, so run it on the Spell
 patch already ships (with the other modules' changes) and put the result back in that patch.
 Players who get the new patch should delete their `Cache` folder.
 
+## Troubleshooting
+
+- **Mining still says "Can't do that while shapeshifted", or Ghost Wolf can't be cast indoors.**
+  The client checks both itself, so it needs the client patch. Make sure the patch was built from
+  the Spell.dbc your realm patch already ships, and that players deleted their `Cache` folder
+  after getting it.
+- **Ghost Wolf is stuck at 40%.** It only gets the mount speed out of combat, outdoors, with
+  Apprentice Riding or better, and when mod-mount-scaling is installed and enabled. Check
+  `ForeverShaman.GhostWolfSpeed.Enable` and `OutOfCombatOnly` in `mod_forever_shaman.conf`.
+- **Two modules patch Spell.dbc and one set of changes is missing.** The client only uses the
+  newest patch's Spell.dbc. Run the patch scripts on the same Spell.dbc, one after the other.
+
+## Credits
+
+Author: [buildthehomelab](https://github.com/buildthehomelab)
+
+Works with [mod-mount-scaling](https://github.com/buildthehomelab/wow-mod-mount-scaling) by the same author.
+
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).
