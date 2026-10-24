@@ -6,7 +6,8 @@
  * - With mod-mount-scaling installed, Ghost Wolf follows its level-scaled mount speed, like a
  *   mount would. mod-mount-scaling only changes mount auras, so Ghost Wolf kept its flat 40%.
  *   Only outdoors and out of combat: in combat and indoors it's the stock 40%, since a mount
- *   can't be used there either. It never drops below 40%.
+ *   can't be used there either. It never drops below 40%. Mount speed bonuses that stack (the
+ *   guild perk Mount Up, Mithril Spurs) multiply in there too, as they would on a mount.
  * - Mining works in Ghost Wolf. Herb Gathering and Skinning already do in stock 3.3.5, but Mining
  *   (and mining or salvaging a creature's corpse) is blocked while shapeshifted. The client checks
  *   this itself, so it needs the optional client patch (tools/patch-forever-shaman-dbc.sh).
@@ -32,6 +33,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 namespace
 {
@@ -67,10 +69,11 @@ namespace
     MountScalingConfig mountScaling;
 
     // mod-mount-scaling's ground formula (src/MountScaling.cpp there), so a shaman in Ghost Wolf
-    // runs as fast as they would on a ground mount. 0 means no riding skill: keep the stock 40%.
+    // runs as fast as they would on a ground mount. 0 means no riding skill (or no
+    // mod-mount-scaling): keep the stock 40%.
     int32 GroundMountSpeed(Player* player)
     {
-        if (!player->HasSpell(SPELL_APPRENTICE_RIDING))
+        if (!mountScaling.enabled || !player->HasSpell(SPELL_APPRENTICE_RIDING))
             return 0;
 
         float const level = player->GetLevel();
@@ -82,10 +85,10 @@ namespace
         return int32(std::min(std::max(c.groundMin, level * c.groundPerLevel), c.groundMax));
     }
 
-    // Set Ghost Wolf's run speed effect. ChangeAmount updates the speed at once.
+    // Set Ghost Wolf's run speed effect.
     void ApplyGhostWolfSpeed(Player* player, Aura* aura)
     {
-        if (!config.ghostWolfSpeedEnabled || !mountScaling.enabled)
+        if (!config.ghostWolfSpeedEnabled)
             return;
 
         AuraEffect* effect = aura->GetEffect(EFFECT_1);
@@ -93,13 +96,28 @@ namespace
             return;
 
         // In combat and indoors, Ghost Wolf keeps its own speed (40%), since a mount can't be used
-        // there either. Outdoors and out of combat it scales, but never below 40%.
+        // there either. Outdoors and out of combat it scales, but never below 40%, and it gets the
+        // mount speed bonuses that stack (SPELL_AURA_MOD_MOUNTED_SPEED_ALWAYS: the guild perk Mount
+        // Up, Mithril Spurs, Carrot on a Stick), multiplied in as the core does on a mount. The
+        // core only gives those to mounts.
         int32 const stockSpeed = effect->GetSpellInfo()->Effects[EFFECT_1].CalcValue();
         bool const scaled = !(config.ghostWolfOutOfCombatOnly && player->IsInCombat()) && player->IsOutdoors();
-        int32 const speed = scaled ? std::max(stockSpeed, GroundMountSpeed(player)) : stockSpeed;
+        int32 speed = stockSpeed;
+        if (scaled)
+        {
+            float const mountBonus = player->GetTotalAuraMultiplier(SPELL_AURA_MOD_MOUNTED_SPEED_ALWAYS,
+                [](AuraEffect const* bonus) { return bonus->GetAmount() > 0; });
+            speed = int32(std::lround((100.0f + std::max(stockSpeed, GroundMountSpeed(player))) * mountBonus)) - 100;
+        }
 
+        // Set the amount and send the new speed once. ChangeAmount would take the effect off first
+        // and send that in-between speed (plain run speed) to the client as well.
         if (speed > 0 && speed != effect->GetAmount())
-            effect->ChangeAmount(speed);
+        {
+            effect->SetAmount(speed);
+            player->UpdateSpeed(MOVE_RUN, true);
+            sScriptMgr->AnticheatSetUnderACKmount(player); // as the core's speed aura handlers do
+        }
     }
 
     // The gathering spells the game data blocks while shapeshifted: every rank of Mining, mining
@@ -215,9 +233,10 @@ public:
         Update(player);
     }
 
-    // Walking into or out of a building. The core keeps IsOutdoors() up to date as the player
-    // moves, and ApplyGhostWolfSpeed only changes the aura when the speed differs, so checking
-    // every update is cheap.
+    // Walking into or out of a building, and mount speed bonuses coming and going (Mount Up is
+    // off in battlegrounds). The core keeps IsOutdoors() up to date as the player moves, and
+    // ApplyGhostWolfSpeed only changes the aura when the speed differs, so checking every update
+    // is cheap.
     void OnPlayerUpdate(Player* player, uint32 /*diff*/) override
     {
         Update(player);

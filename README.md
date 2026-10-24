@@ -30,12 +30,19 @@ Indoors it's always the stock 40%, in or out of combat, since mounts can't go in
 Walking into a building drops it to 40% and walking back out brings the mount speed back. Ghost
 Wolf never drops below 40%, even when the mount curve is lower at low levels.
 
-Ghost Wolf can still be cast in combat, as in stock, and works indoors (see below). Mount-only
-bonuses (Riding Crop, Mithril Spurs, Carrot on a Stick) don't apply to it, and other run speed
-effects don't stack with it: the core takes the highest one. Improved Ghost Wolf and the Glyph
-of Ghost Wolf work as before.
+Ghost Wolf can still be cast in combat, as in stock, and works indoors (see below). Where it gets
+the mount speed (outdoors, out of combat), the mount speed bonuses that stack also apply, and
+they **multiply**, as on a mount: the guild perk Mount Up
+([mod-guild-levels](https://github.com/buildthehomelab/wow-mod-guild-levels)), Mithril Spurs,
+Carrot on a Stick and the riding glove enchant. A level 60 shaman with 150% Ghost Wolf and Mount
+Up runs 2.5 × 1.1 = 2.75 times run speed. Riding Crop and Crusader Aura still don't apply
+(they're mount-only "doesn't stack" bonuses). Run speed bonuses that stack (Plainsrunning,
+Quickness, Drums of Speed) multiply in as in stock. Other run speed effects (Sprint, boot
+enchants) don't stack with Ghost Wolf: the core takes the highest one. Improved Ghost Wolf and the
+Glyph of Ghost Wolf work as before.
 
-Without mod-mount-scaling (or with `MountScaling.Enable = 0`) nothing changes.
+Without mod-mount-scaling (or with `MountScaling.Enable = 0`) Ghost Wolf keeps its stock 40%, but
+still gets the mount speed bonuses outdoors and out of combat.
 [mod-forever-druid](https://github.com/buildthehomelab/wow-mod-forever-druid) does the same for
 Travel Form and the flight forms.
 
@@ -84,7 +91,7 @@ Rebuild the server and copy `conf/mod_forever_shaman.conf.dist` to your config f
 
 | Setting | Default | What it does |
 |---------|---------|--------------|
-| `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling. With `0`, it's the stock 40%. |
+| `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling and gets the mount speed bonuses that stack. With `0`, it's the stock 40% with no mount bonuses. |
 | `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly` | `1` | Only out of combat; in combat Ghost Wolf is the stock 40%. With `0`, the mount speed applies in combat too. |
 | `ForeverShaman.GhostWolfGathering.Enable` | `1` | Mining works in Ghost Wolf (needs the client patch). |
 | `ForeverShaman.GhostWolfIndoors.Enable` | `1` | Ghost Wolf works indoors (casting it there needs the client patch). |

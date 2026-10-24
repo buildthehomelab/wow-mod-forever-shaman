@@ -14,8 +14,10 @@
 #                     speed as a ground mount, from Apprentice or Journeyman Riding. The numbers
 #                     come from mod-mount-scaling's own MountScaling.* settings. A shaman without
 #                     riding keeps the stock 40%. Indoors it's always the stock 40%, and it never
-#                     drops below 40%. Does nothing without mod-mount-scaling or with
-#                     MountScaling.Enable = 0.
+#                     drops below 40%. Outdoors and out of combat, mount speed bonuses that stack
+#                     (Mount Up, Mithril Spurs) multiply in, as on a mount. Without
+#                     mod-mount-scaling (or with MountScaling.Enable = 0) Ghost Wolf keeps the
+#                     stock 40% but still gets those bonuses.
 #        Default:     1
 #
 
