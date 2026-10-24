@@ -85,7 +85,7 @@ namespace
         return int32(std::min(std::max(c.groundMin, level * c.groundPerLevel), c.groundMax));
     }
 
-    // Set Ghost Wolf's run speed effect. ChangeAmount updates the speed at once.
+    // Set Ghost Wolf's run speed effect.
     void ApplyGhostWolfSpeed(Player* player, Aura* aura)
     {
         if (!config.ghostWolfSpeedEnabled)
@@ -110,8 +110,14 @@ namespace
             speed = int32(std::lround((100.0f + std::max(stockSpeed, GroundMountSpeed(player))) * mountBonus)) - 100;
         }
 
+        // Set the amount and send the new speed once. ChangeAmount would take the effect off first
+        // and send that in-between speed (plain run speed) to the client as well.
         if (speed > 0 && speed != effect->GetAmount())
-            effect->ChangeAmount(speed);
+        {
+            effect->SetAmount(speed);
+            player->UpdateSpeed(MOVE_RUN, true);
+            sScriptMgr->AnticheatSetUnderACKmount(player); // as the core's speed aura handlers do
+        }
     }
 
     // The gathering spells the game data blocks while shapeshifted: every rank of Mining, mining

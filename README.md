@@ -91,7 +91,7 @@ Rebuild the server and copy `conf/mod_forever_shaman.conf.dist` to your config f
 
 | Setting | Default | What it does |
 |---------|---------|--------------|
-| `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling. With `0`, it's the stock 40%. |
+| `ForeverShaman.GhostWolfSpeed.Enable` | `1` | Ghost Wolf follows mod-mount-scaling and gets the mount speed bonuses that stack. With `0`, it's the stock 40% with no mount bonuses. |
 | `ForeverShaman.GhostWolfSpeed.OutOfCombatOnly` | `1` | Only out of combat; in combat Ghost Wolf is the stock 40%. With `0`, the mount speed applies in combat too. |
 | `ForeverShaman.GhostWolfGathering.Enable` | `1` | Mining works in Ghost Wolf (needs the client patch). |
 | `ForeverShaman.GhostWolfIndoors.Enable` | `1` | Ghost Wolf works indoors (casting it there needs the client patch). |
